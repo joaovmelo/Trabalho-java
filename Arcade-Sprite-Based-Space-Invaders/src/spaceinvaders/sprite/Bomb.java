@@ -21,7 +21,7 @@ public class Bomb extends BadSprite {
         this.y = y;
 
         String bombImg = "images/bomb.png";
-        ImageIcon ii = new ImageIcon(bombImg);
+        ImageIcon ii = new ImageIcon(getClass().getResource("/images/bomb.png"));
         setImage(ii.getImage());
     }
 

@@ -18,7 +18,7 @@ public class Shot extends BadSprite {
     private void initShot(int x, int y) {
 
         String shotImg = "images/shot.png";
-        ImageIcon ii = new ImageIcon(shotImg);
+        ImageIcon ii = new ImageIcon(getClass().getResource("/images/shot.png"));
         setImage(ii.getImage());
 
         int H_SPACE = 6;

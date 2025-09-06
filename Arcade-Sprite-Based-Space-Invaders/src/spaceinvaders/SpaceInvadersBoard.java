@@ -23,11 +23,7 @@ public class SpaceInvadersBoard extends AbstractBoard{
     private int direction = -1;
     private int deaths = 0;
 
-
     private String explImg = "images/explosion.png";
-
-
-
 
     protected void createBadSprites() {  // create sprites
         for (int i = 0; i < 4; i++) {
