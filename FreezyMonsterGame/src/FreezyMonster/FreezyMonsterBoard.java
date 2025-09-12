@@ -1,147 +1,222 @@
+// FreezyMonsterBoard.java
 package FreezyMonster;
 
-import FreezyMonster.sprite.FreezyMonsterPlayer;
-import FreezyMonster.sprite.Gosma;
-import FreezyMonster.sprite.MonsterSprite;
-import FreezyMonster.sprite.Ray;
-import spriteframework.AbstractBoard;
-import spriteframework.sprite.BadSprite;
+import FreezyMonster.sprite.PlayerFreezy;
+import spriteframework.sprite.*;
+import spriteframework.*;
+import FreezyMonster.sprite.FreezyRay;
+import FreezyMonster.sprite.Goop;
+import FreezyMonster.sprite.Monster;
 import spriteframework.sprite.Player;
-
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class FreezyMonsterBoard extends AbstractBoard {
-    private Ray ray;
-    private int monstersKilled = 0;
 
-    @Override
-    protected Player createPlayer() {
-        return new FreezyMonsterPlayer();
-    }
+    private LinkedList<FreezyRay> freezyRays;
+    private LinkedList<Goop> goops;
+    private int monstersFrozen = 0;
+    private int totalMonsters = 0;
+    private Random random = new Random();
 
     @Override
     protected void createBadSprites() {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 5; j++) {
-                int monsterNumber = (i * 5 + j) % 9 + 1;
-                MonsterSprite monster = new MonsterSprite(
-                        Commons.MONSTER_INIT_X + Commons.MONSTER_SPACING_X * j,
-                        Commons.MONSTER_INIT_Y + Commons.MONSTER_SPACING_Y * i,
-                        monsterNumber);
-                badSprites.add(monster);
-            }
+        // Criar monstros - exemplo com 4 monstros
+        totalMonsters = 4;
+        for (int i = 0; i < totalMonsters; i++) {
+            Monster monster = new Monster(50 + i * 70, 50);
+            badSprites.add(monster);
         }
     }
 
     @Override
     protected void createOtherSprites() {
-        ray = new Ray(0, 0, 0, 0);
-        ray.die();
-    }
-
-    @Override
-    protected void processOtherSprites(Player player, KeyEvent e) {
-        int key = e.getKeyCode();
-        if (key == KeyEvent.VK_SPACE) {
-            if (inGame && !ray.isVisible()) {
-                FreezyMonsterPlayer p = (FreezyMonsterPlayer) player;
-                ray = new Ray(p.getX(), p.getY(), p.getLastDx(), p.getLastDy());
-            }
-        }
+        freezyRays = new LinkedList<>();
+        goops = new LinkedList<>();
     }
 
     @Override
     protected void drawOtherSprites(Graphics g) {
-        if (ray.isVisible()) {
-            g.drawImage(ray.getImage(), ray.getX(), ray.getY(), this);
+        // Desenhar raios congelantes
+        for (FreezyRay ray : freezyRays) {
+            if (ray.isVisible()) {
+                g.drawImage(ray.getImage(), ray.getX(), ray.getY(), this);
+            }
         }
 
-        for (BadSprite monster : badSprites) {
-            MonsterSprite ms = (MonsterSprite) monster;
-            Gosma gosma = ms.getGosma();
-            if (!gosma.isDestroyed()) {
-                g.drawImage(gosma.getImage(), gosma.getX(), gosma.getY(), this);
+        // Desenhar gosmas
+        for (Goop goop : goops) {
+            if (goop.isVisible()) {
+                g.drawImage(goop.getImage(), goop.getX(), goop.getY(), this);
             }
         }
     }
 
     @Override
     protected void update() {
-        if (monstersKilled == Commons.NUMBER_OF_MONSTERS_TO_DESTROY) {
-            inGame = false;
-            timer.stop();
-            message = "Game won!";
-        }
+        if (!inGame) return;
 
-        for (Player player : players) {
-            player.act();
-        }
+        Player player = getPlayer(0);
+        player.act();
 
-        if (ray.isVisible()) {
-            ray.act();
+        // Atualizar monstros
+        for (BadSprite bad : badSprites) {
+            if (bad instanceof Monster) {
+                Monster monster = (Monster) bad;
+                if (monster.isVisible() && !monster.isFrozen()) {
+                    monster.act();
 
-            if (ray.getX() < 0 || ray.getX() > spriteframework.Commons.BOARD_WIDTH || ray.getY() < 0 || ray.getY() > spriteframework.Commons.BOARD_HEIGHT) {
-                ray.die();
-            }
-
-            for (BadSprite monster : badSprites) {
-                if (monster.isVisible() && ray.isVisible()) {
-                    if (ray.getRect().intersects(monster.getRect())) {
-                        MonsterSprite ms = (MonsterSprite) monster;
-                        if (!ms.isFrozen()) {
-                            ms.freeze();
-                        } else {
-                            ms.die();
-                            monstersKilled++;
-                        }
-                        ray.die();
+                    // Chance de soltar gosma
+                    if (random.nextInt(100) < 2) { // 2% de chance por ciclo
+                        releaseGoop(monster);
                     }
                 }
             }
         }
 
-        for (BadSprite monster : badSprites) {
-            if (monster.isVisible()) {
-                monster.act();
-            }
-        }
+        // Atualizar raios congelantes
+        updateFreezeRays();
 
-        Random generator = new Random();
-        for (BadSprite monster : badSprites) {
-            int shot = generator.nextInt(150);
-            MonsterSprite ms = (MonsterSprite) monster;
-            Gosma gosma = ms.getGosma();
+        // Atualizar gosmas
+        updateGoops();
 
-            if (shot == 5 && ms.isVisible() && gosma.isDestroyed()) {
-                gosma.setDestroyed(false);
-                gosma.setX(ms.getX());
-                gosma.setY(ms.getY());
-                gosma.setDx(generator.nextInt(3) - 1);
-                gosma.setDy(generator.nextInt(3) - 1);
-            }
-
-            Player player = players.get(0);
-            if (player.isVisible() && !gosma.isDestroyed()) {
-                if (gosma.getRect().intersects(player.getRect())) {
-                    player.setDying(true);
-                    gosma.setDestroyed(true);
-                    inGame = false;
-                    message = "Game Over";
-                }
-            }
-
-            if (!gosma.isDestroyed()) {
-                gosma.act();
-                if (gosma.getX() < 0 || gosma.getX() > spriteframework.Commons.BOARD_WIDTH || gosma.getY() < 0 || gosma.getY() > spriteframework.Commons.BOARD_HEIGHT) {
-                    gosma.setDestroyed(true);
-                }
-                if(ray.isVisible() && ray.getRect().intersects(gosma.getRect())){
-                    ray.die();
-                    gosma.setDestroyed(true);
-                }
-            }
+        // Verificar vitória
+        if (monstersFrozen >= totalMonsters) {
+            message = "You Win!";
+            inGame = false;
         }
     }
+
+    private void updateFreezeRays() {
+        LinkedList<FreezyRay> raysToRemove = new LinkedList<>();
+
+        for (FreezyRay ray : freezyRays) {
+            if (ray.isVisible()) {
+                ray.act();
+
+                // Verificar se saiu da tela
+                if (ray.getX() < 0 || ray.getX() > Commons.BOARD_WIDTH ||
+                        ray.getY() < 0 || ray.getY() > Commons.BOARD_HEIGHT) {
+                    raysToRemove.add(ray);
+                    continue;
+                }
+
+                // Verificar colisão com monstros
+                for (BadSprite bad : badSprites) {
+                    if (bad instanceof Monster && bad.isVisible() &&
+                            ray.getRect().intersects(bad.getRect())) {
+                        Monster monster = (Monster) bad;
+                        if (!monster.isFrozen()) {
+                            monster.freeze();
+                            monstersFrozen++;
+                        }
+                        raysToRemove.add(ray);
+                        break;
+                    }
+                }
+
+                // Verificar colisão com gosmas
+                for (Goop goop : goops) {
+                    if (goop.isVisible() && ray.getRect().intersects(goop.getRect())) {
+                        goop.die();
+                        raysToRemove.add(ray);
+                        break;
+                    }
+                }
+            } else {
+                raysToRemove.add(ray);
+            }
+        }
+
+        freezyRays.removeAll(raysToRemove);
+    }
+
+    private void updateGoops() {
+        LinkedList<Goop> goopsToRemove = new LinkedList<>();
+
+        for (Goop goop : goops) {
+            if (goop.isVisible()) {
+                goop.act();
+
+                // Verificar se saiu da tela
+                if (goop.getX() < 0 || goop.getX() > Commons.BOARD_WIDTH ||
+                        goop.getY() < 0 || goop.getY() > Commons.BOARD_HEIGHT) {
+                    goopsToRemove.add(goop);
+                    continue;
+                }
+
+                // Verificar colisão com player
+                Player player = getPlayer(0);
+                if (player.isVisible() && goop.getRect().intersects(player.getRect())) {
+                    player.setDying(true);
+                    inGame = false;
+                    break;
+                }
+            } else {
+                goopsToRemove.add(goop);
+            }
+        }
+
+        goops.removeAll(goopsToRemove);
+    }
+
+    private void releaseGoop(Monster monster) {
+        int directionX = random.nextInt(3) - 1; // -1, 0, ou 1
+        int directionY = random.nextInt(3) - 1; // -1, 0, ou 1
+
+        // Garantir que a gosma se mova em pelo menos uma direção
+        if (directionX == 0 && directionY == 0) {
+            directionX = 1;
+        }
+
+        Goop goop = new Goop(monster.getX(), monster.getY(), directionX, directionY);
+        goops.add(goop);
+    }
+
+    @Override
+    protected void processOtherSprites(Player player, KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            shootFreezeRay(player);
+        }
+    }
+
+    /*private void shootFreezeRay(PlayerFreezy player) {
+        int dx = player.getDx();
+        int dy = player.getDy();
+
+        // Determinar direção baseada no movimento do player
+        if (dx == 0 && dy == 0) {
+            // Se não está se movendo, atira para cima
+            dy = -5;
+        } else {
+            // Normaliza a direção
+            if (dx != 0) dx = dx > 0 ? 5 : -5;
+            if (dy != 0) dy = dy > 0 ? 5 : -5;
+        }
+
+        FreezyRay ray = new FreezyRay(player.getX() + player.getImageWidth() / 2,
+                player.getY() + player.getImageHeight() / 2, dx, dy);
+        freezyRays.add(ray);
+    }*/
+    private void shootFreezeRay(Player player) {
+        int dx = player.getDx();
+        int dy = player.getDy();
+
+        // Determinar direção baseada no movimento do player
+        if (dx == 0 && dy == 0) {
+            // Se não está se movendo, atira para cima
+            dy = -5;
+        } else {
+            // Normaliza a direção
+            if (dx != 0) dx = dx > 0 ? 5 : -5;
+            if (dy != 0) dy = dy > 0 ? 5 : -5;
+        }
+
+        FreezyRay ray = new FreezyRay(player.getX() + player.getImageWidth() / 2,
+                player.getY() + player.getImageHeight() / 2, dx, dy);
+        freezyRays.add(ray);
+    }
+
 }
