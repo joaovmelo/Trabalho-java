@@ -14,6 +14,7 @@ public class Sprite {
     protected int imageWidth;
     protected int imageHeight;
     protected int dx;
+    protected int dy;
 
     public Sprite() {
 
@@ -104,5 +105,13 @@ public class Sprite {
     public void moveY(int direction) {
 
         this.y += direction;
+    }
+
+    public int getDy() {
+        return dy;
+    }
+
+    public int getDx() {
+        return dx;
     }
 }

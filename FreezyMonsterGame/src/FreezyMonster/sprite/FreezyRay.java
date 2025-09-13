@@ -1,11 +1,11 @@
-// FreezyRay.java
 package FreezyMonster.sprite;
 
 import javax.swing.ImageIcon;
 import spriteframework.sprite.Sprite;
 
-public class FreezyRay extends Sprite {
+import java.awt.*;
 
+public class FreezyRay extends Sprite {
     public FreezyRay(int x, int y, int dx, int dy) {
         this.x = x;
         this.y = y;
@@ -17,10 +17,12 @@ public class FreezyRay extends Sprite {
 
     protected void loadImage() {
         ImageIcon ii = new ImageIcon(getClass().getResource("/images/ray.png"));
-        setImage(ii.getImage());
+        Image scaledImage = ii.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
+        setImage(new ImageIcon(scaledImage).getImage());
     }
 
     public void act() {
+        // Regra 3: Raio congelante vai em linha reta
         x += dx;
         y += dy;
     }

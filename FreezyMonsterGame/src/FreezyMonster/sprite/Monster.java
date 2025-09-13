@@ -1,86 +1,69 @@
-// Monster.java
 package FreezyMonster.sprite;
 
 import javax.swing.ImageIcon;
+import java.awt.Image;
 import java.util.Random;
 import spriteframework.sprite.BadSprite;
 import spriteframework.Commons;
 
 public class Monster extends BadSprite {
+    private static final int MONSTER_WIDTH = 30;
+    private static final int MONSTER_HEIGHT = 30;
+
     private boolean frozen = false;
     private Random random = new Random();
-    private int directionX;
-    private int directionY;
-    private int speed = 2;
+    private int speed = 1;
+    private Image normalImage;
+    private Image frozenImage;
 
-    public Monster(int x, int y) {
+    public Monster(int x, int y, int type) {
         this.x = x;
         this.y = y;
-        loadImage();
+        loadImage(type); // Carrega a imagem baseada no tipo
         getImageDimensions();
-        chooseRandomDirection();
+
+        dx = random.nextInt(3) - 1;
+        dy = random.nextInt(3) - 1;
+        if (dx == 0 && dy == 0) dx = 1;
     }
 
-    protected void loadImage() {
-        ImageIcon ii = new ImageIcon(getClass().getResource("/images/monster.png"));
-        setImage(ii.getImage());
-    }
+    protected void loadImage(int type) {
+        // Carrega a imagem normal
+        String normalImagePath = "/images/monster" + type + ".png";
+        ImageIcon iiNormal = new ImageIcon(getClass().getResource(normalImagePath));
+        this.normalImage = iiNormal.getImage().getScaledInstance(MONSTER_WIDTH, MONSTER_HEIGHT, Image.SCALE_SMOOTH);
 
-    public void loadFrozenImage() {
-        ImageIcon ii = new ImageIcon(getClass().getResource("/images/monster_frozen.png"));
-        setImage(ii.getImage());
+        // Carrega a imagem congelada
+        String frozenImagePath = "/images/monster" + type + "bg.png";
+        ImageIcon iiFrozen = new ImageIcon(getClass().getResource(frozenImagePath));
+        this.frozenImage = iiFrozen.getImage().getScaledInstance(MONSTER_WIDTH, MONSTER_HEIGHT, Image.SCALE_SMOOTH);
+
+        // Define a imagem inicial
+        setImage(this.normalImage);
     }
 
     public void act() {
         if (!frozen) {
-            // Mudar direção aleatoriamente
-            if (random.nextInt(100) < 5) { // 5% de chance de mudar direção
-                chooseRandomDirection();
-            }
+            x += dx * speed;
+            y += dy * speed;
 
-            x += directionX * speed;
-            y += directionY * speed;
+            if (x <= 0 || x >= Commons.BOARD_WIDTH - MONSTER_WIDTH) dx *= -1;
+            if (y <= 0 || y >= Commons.GROUND - MONSTER_HEIGHT) dy *= -1;
 
-            // Manter dentro dos limites
-            if (x <= 2) {
-                x = 2;
-                directionX = 1;
+            if (random.nextInt(100) < 2) { // 2% de chance de mudar direção
+                dx = random.nextInt(3) - 1;
+                dy = random.nextInt(3) - 1;
+                if (dx == 0 && dy == 0) dx = 1;
             }
-            if (x >= Commons.BOARD_WIDTH - 2 * getImageWidth()) {
-                x = Commons.BOARD_WIDTH - 2 * getImageWidth();
-                directionX = -1;
-            }
-            if (y <= 2) {
-                y = 2;
-                directionY = 1;
-            }
-            if (y >= Commons.GROUND - getImageHeight()) {
-                y = Commons.GROUND - getImageHeight();
-                directionY = -1;
-            }
-        }
-    }
-
-    private void chooseRandomDirection() {
-        directionX = random.nextInt(3) - 1; // -1, 0, ou 1
-        directionY = random.nextInt(3) - 1; // -1, 0, ou 1
-
-        // Garantir que se mova em pelo menos uma direção
-        if (directionX == 0 && directionY == 0) {
-            directionX = 1;
         }
     }
 
     public void freeze() {
-        frozen = true;
-        loadFrozenImage();
+        this.frozen = true;
+        setImage(this.frozenImage); // Apenas troca para a imagem já carregada
     }
 
     public boolean isFrozen() {
-        return frozen;
-    }
-
-    public boolean isDestroyed() {
         return frozen;
     }
 }

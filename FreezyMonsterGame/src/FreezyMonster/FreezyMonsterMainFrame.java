@@ -1,7 +1,7 @@
 package FreezyMonster;
 
 import spriteframework.*;
-import spriteframework.sprite.*;
+
 public class FreezyMonsterMainFrame extends MainFrame {
 
     public FreezyMonsterMainFrame() {
@@ -14,6 +14,9 @@ public class FreezyMonsterMainFrame extends MainFrame {
     }
 
     public static void main(String[] args) {
-        new FreezyMonsterMainFrame();
+        // Invoca o construtor da superclasse (JFrame) na thread de eventos da UI
+        java.awt.EventQueue.invokeLater(() -> {
+            new FreezyMonsterMainFrame();
+        });
     }
 }
