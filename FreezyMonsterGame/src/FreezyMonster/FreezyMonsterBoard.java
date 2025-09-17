@@ -1,5 +1,7 @@
 package FreezyMonster;
 
+import FreezyMonster.factory.MonsterFactory;
+import FreezyMonster.factory.ProjectileFactory;
 import FreezyMonster.sprite.PlayerFreezy;
 import spriteframework.sprite.*;
 import spriteframework.*;
@@ -13,11 +15,12 @@ import java.util.Random;
 
 public class FreezyMonsterBoard extends AbstractBoard {
 
-    // Agora podemos inicializar as variáveis na declaração, que é a forma mais limpa.
     private LinkedList<FreezyRay> freezyRays = new LinkedList<>();
     private LinkedList<Goop> goops = new LinkedList<>();
     private final int numberOfMonsters = 9;
     private Random random = new Random();
+    private MonsterFactory monsterFactory = new MonsterFactory();
+    private ProjectileFactory projectileFactory = new ProjectileFactory();
 
     @Override
     protected Player createPlayer() {
@@ -29,7 +32,7 @@ public class FreezyMonsterBoard extends AbstractBoard {
         for (int i = 0; i < numberOfMonsters; i++) {
             int x = random.nextInt(Commons.BOARD_WIDTH - 50) + 20;
             int y = random.nextInt(Commons.GROUND - 100) + 20;
-            badSprites.add(new Monster(x, y, i + 1));
+            badSprites.add(monsterFactory.createMonster(x, y, i + 1));
         }
     }
 
@@ -71,7 +74,7 @@ public class FreezyMonsterBoard extends AbstractBoard {
             dy = (int) (Math.signum(dy) * speed);
         }
 
-        freezyRays.add(new FreezyRay(player.getX(), player.getY(), dx, dy));
+        freezyRays.add((FreezyRay) projectileFactory.createFreezyRay(player.getX(), player.getY(), dx, dy));
     }
 
     @Override
@@ -90,11 +93,11 @@ public class FreezyMonsterBoard extends AbstractBoard {
             Monster monster = (Monster) bad;
             monster.act();
 
-            if (!monster.isFrozen() && monster.isVisible() && random.nextInt(700) < 1) { // 0.5% chance
+            if (!monster.isFrozen() && monster.isVisible() && random.nextInt(700) < 1) {
                 int dirX = random.nextInt(3) - 1;
                 int dirY = random.nextInt(3) - 1;
                 if (dirX == 0 && dirY == 0) dirX = 1;
-                goops.add(new Goop(monster.getX(), monster.getY(), dirX, dirY));
+                goops.add((Goop) projectileFactory.createGoop(monster.getX(), monster.getY(), dirX, dirY));
             }
         }
     }

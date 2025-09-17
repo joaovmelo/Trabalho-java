@@ -2,17 +2,21 @@ package FreezyMonster.sprite;
 
 import javax.swing.ImageIcon;
 import spriteframework.sprite.Sprite;
+import FreezyMonster.strategy.MoveStrategy;
+import FreezyMonster.strategy.LinearMoveStrategy;
 
 import java.awt.*;
 
 public class Goop extends Sprite {
     private final int speed = 1;
+    private MoveStrategy moveStrategy;
 
     public Goop(int x, int y, int directionX, int directionY) {
         this.x = x;
         this.y = y;
         this.dx = directionX * speed;
         this.dy = directionY * speed;
+        this.moveStrategy = new LinearMoveStrategy();
         loadImage();
         getImageDimensions();
     }
@@ -24,8 +28,6 @@ public class Goop extends Sprite {
     }
 
     public void act() {
-        // Regra 6: Gosmas vão em linha reta
-        x += dx;
-        y += dy;
+        moveStrategy.move(this);
     }
 }

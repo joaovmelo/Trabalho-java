@@ -2,15 +2,20 @@ package FreezyMonster.sprite;
 
 import javax.swing.ImageIcon;
 import spriteframework.sprite.Sprite;
+import FreezyMonster.strategy.MoveStrategy;
+import FreezyMonster.strategy.LinearMoveStrategy;
 
 import java.awt.*;
 
 public class FreezyRay extends Sprite {
+    private MoveStrategy moveStrategy;
+
     public FreezyRay(int x, int y, int dx, int dy) {
         this.x = x;
         this.y = y;
         this.dx = dx;
         this.dy = dy;
+        this.moveStrategy = new LinearMoveStrategy();
         loadImage();
         getImageDimensions();
     }
@@ -22,8 +27,6 @@ public class FreezyRay extends Sprite {
     }
 
     public void act() {
-        // Regra 3: Raio congelante vai em linha reta
-        x += dx;
-        y += dy;
+        moveStrategy.move(this);
     }
 }
